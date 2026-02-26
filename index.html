@@ -201,7 +201,7 @@
       }
       .product-image {
         width: 100%;
-        height: 180px;
+        height: 320px;
         object-fit: cover;
         border-radius: 0.75rem 0.75rem 0 0;
         will-change: transform;
@@ -262,20 +262,44 @@
       html {
         scroll-behavior: smooth;
       }
-
       button,
       a,
       .cursor-pointer {
         touch-action: manipulation;
       }
 
-      /* Form input focus styles */
       input:focus,
       select:focus,
       textarea:focus {
         outline: none;
         ring: 2px solid #f59e0b;
         border-color: #f59e0b;
+      }
+
+      /* Invoice card (the new modal) */
+      .invoice-card {
+        transition: all 0.2s ease;
+      }
+      .copy-btn:active {
+        transform: scale(0.96);
+      }
+      @media print {
+        .no-print {
+          display: none;
+        }
+        body {
+          background: white;
+        }
+        .invoice-card {
+          box-shadow: none;
+          border: 1px solid #e5e7eb;
+        }
+      }
+
+      /* Voucher card in invoice */
+      .voucher-card {
+        background: linear-gradient(145deg, #fef3c7, #fde68a);
+        border-left: 6px solid #b45309;
       }
     </style>
   </head>
@@ -291,7 +315,6 @@
         poster="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&auto=format"
       >
         <source src="./209424_tiny.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
       </video>
       <div class="absolute inset-0 flex items-center justify-center banner-content">
         <div class="text-center">
@@ -333,7 +356,7 @@
               class="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
             >
               <i class="fa-solid fa-tag"></i>
-              <span id="headerDiscountCode">WELCOME15</span>
+              <span id="headerDiscountCode">WELCOME5</span>
               <i class="fa-regular fa-copy text-xs"></i>
             </button>
           </div>
@@ -377,11 +400,6 @@
           class="text-stone-600 hover:text-amber-700 transition-colors duration-200 flex items-center gap-1 py-1"
           ><i class="fa-regular fa-envelope mr-1"></i>Contact</a
         >
-        <a
-          href="#subscribe"
-          class="text-stone-600 hover:text-amber-700 transition-colors duration-200 flex items-center gap-1 py-1"
-          ><i class="fa-regular fa-bell mr-1"></i>Subscribe</a
-        >
       </div>
     </header>
 
@@ -405,10 +423,13 @@
             </p>
             <div class="flex gap-2">
               <button
-                onclick="window.closeSuccessPopup()"
+                onclick="
+                  window.closeSuccessPopup();
+                  window.openInvoiceModal();
+                "
                 class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1"
               >
-                <i class="fa-regular fa-eye"></i> view order
+                <i class="fa-regular fa-file-lines"></i> view invoice
               </button>
               <button
                 onclick="window.closeSuccessPopup()"
@@ -436,7 +457,7 @@
       </div>
     </div>
 
-    <!-- ========== DISCOUNT CODE MODAL ========== -->
+    <!-- ========== DISCOUNT CODE MODAL (for showing code from invoice) ========== -->
     <div
       id="discountModal"
       class="fixed inset-0 z-50 flex items-center justify-center hidden modal-transition"
@@ -447,7 +468,7 @@
       >
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-2xl font-bold text-stone-800 flex items-center gap-2">
-            <i class="fa-solid fa-tag text-amber-700"></i> Your Discount Code
+            <i class="fa-solid fa-tag text-amber-700"></i> Your 5% Discount Code
           </h3>
           <button
             onclick="window.closeDiscountModal()"
@@ -458,16 +479,16 @@
         </div>
         <div class="text-center">
           <p class="text-stone-600 mb-4">
-            Use this code at checkout for 15% off your entire order!
+            Thank you for your purchase! Use this code next time for 5% off.
           </p>
           <div
             id="discountCodeDisplay"
             class="discount-code text-3xl font-bold text-white py-4 px-6 rounded-xl mb-4 inline-block"
             onclick="window.copyDiscountCode()"
           >
-            WELCOME15
+            FRESH5XYZ
           </div>
-          <p class="text-sm text-stone-500 mb-2">Click the code to copy</p>
+          <p class="text-sm text-stone-500 mb-2">Click the code to copy (one‑time use)</p>
           <div id="copyNotification" class="text-green-600 text-sm hidden">
             ✓ Copied to clipboard!
           </div>
@@ -480,6 +501,244 @@
         </div>
       </div>
     </div>
+
+    <!-- ========== INVOICE MODAL (PROFESSIONAL, integrated) ========== -->
+    <div
+      id="invoiceModal"
+      class="fixed inset-0 z-50 flex items-center justify-center hidden modal-transition"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-4xl w-full mx-4 p-0 shadow-2xl relative border border-amber-200 max-h-[90vh] overflow-y-auto transform transition-all duration-200 scale-95 opacity-0"
+        id="invoiceModalContent"
+      >
+        <!-- INVOICE CARD (clean, no margins, directly inside modal) -->
+        <div class="invoice-card w-full bg-white overflow-hidden">
+          <div class="p-6 md:p-8 lg:p-10">
+            <!-- header with logo and company identity -->
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-amber-200 pb-6 mb-6"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl flex items-center justify-center text-white shadow-md"
+                >
+                  <i class="fa-solid fa-mug-hot text-2xl"></i>
+                </div>
+                <div>
+                  <h1 class="text-2xl font-bold text-stone-800 tracking-tight">
+                    Bean & <span class="text-amber-700">Brew</span>
+                  </h1>
+                  <p class="text-xs text-stone-500 mt-0.5">since 2015 · micro‑roastery</p>
+                </div>
+              </div>
+              <div class="text-sm text-stone-600 space-y-0.5 text-right">
+                <p>123 Coffee Lane, Roastery District</p>
+                <p>Portland, OR 97205, USA</p>
+                <p class="flex items-center justify-end gap-2">
+                  <i class="fa-regular fa-envelope text-amber-600"></i> hello@beanandbrew.com
+                </p>
+                <p class="flex items-center justify-end gap-2">
+                  <i class="fa-regular fa-building text-amber-600"></i> VAT: US123456789
+                </p>
+              </div>
+            </div>
+
+            <!-- customer & invoice details (two‑column grid) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <!-- billed to – dynamically filled with shipping info -->
+              <div class="bg-amber-50/60 rounded-xl p-5 border border-amber-100">
+                <h2
+                  class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3 flex items-center gap-1"
+                >
+                  <i class="fa-regular fa-user"></i> Billed to
+                </h2>
+                <div class="space-y-1.5 text-stone-700">
+                  <p class="font-semibold text-lg" id="invoiceCustomerName">Alex Rivera</p>
+                  <p class="text-sm flex items-start gap-2">
+                    <i class="fa-regular fa-envelope text-amber-600 w-4 mt-0.5"></i>
+                    <span id="invoiceCustomerEmail">alex.r@coffee.com</span>
+                  </p>
+                  <p class="text-sm flex items-start gap-2">
+                    <i class="fa-regular fa-address-book text-amber-600 w-4 mt-0.5"></i>
+                    <span id="invoiceCustomerPhone">+1 (503) 555‑0912</span>
+                  </p>
+                  <p class="text-sm flex items-start gap-2">
+                    <i class="fa-regular fa-location-dot text-amber-600 w-4 mt-0.5"></i>
+                    <span id="invoiceCustomerAddress"
+                      >4825 N Williams Ave, Apt 2B, Portland, OR 97217</span
+                    >
+                  </p>
+                </div>
+              </div>
+
+              <!-- invoice meta (right side) -->
+              <div
+                class="bg-white rounded-xl p-5 border border-amber-200 shadow-sm flex flex-col justify-between"
+              >
+                <div class="flex justify-between items-start">
+                  <h2 class="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                    Invoice
+                  </h2>
+                  <span
+                    class="bg-amber-100 text-amber-800 text-xs font-mono px-3 py-1 rounded-full border border-amber-200"
+                    id="invoiceNumber"
+                    >#INV-2025-0421</span
+                  >
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
+                  <div>
+                    <p class="text-stone-500 text-xs">Issue date</p>
+                    <p class="font-medium text-stone-800">
+                      <i class="fa-regular fa-calendar mr-1 text-amber-600"></i>
+                      <span id="invoiceIssueDate">21 Apr 2025</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-stone-500 text-xs">Due date</p>
+                    <p class="font-medium text-stone-800">
+                      <i class="fa-regular fa-calendar-check mr-1 text-amber-600"></i>
+                      <span id="invoiceDueDate">05 May 2025</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-stone-500 text-xs">Payment terms</p>
+                    <p class="font-medium text-stone-800" id="invoiceTerms">Net 14</p>
+                  </div>
+                  <div>
+                    <p class="text-stone-500 text-xs">Order ref</p>
+                    <p class="font-medium text-stone-800" id="invoiceOrderRef">#BB-0415</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ITEMS TABLE – dynamically generated -->
+            <div class="overflow-x-auto border border-amber-200 rounded-xl bg-white mb-6">
+              <table class="w-full text-sm">
+                <thead class="bg-amber-50 border-b border-amber-200 text-stone-700">
+                  <tr>
+                    <th class="px-5 py-4 text-left font-semibold">Item description</th>
+                    <th class="px-5 py-4 text-right font-semibold">Qty</th>
+                    <th class="px-5 py-4 text-right font-semibold">Unit price</th>
+                    <th class="px-5 py-4 text-right font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceItemsBody" class="divide-y divide-amber-100">
+                  <!-- filled by js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- invoice totals + discount code block -->
+            <div class="mt-8 flex flex-col lg:flex-row lg:justify-between gap-6">
+              <!-- discount code card (left side) with copy button -->
+              <div class="w-full lg:w-1/2">
+                <div
+                  class="bg-gradient-to-br from-amber-50 to-white rounded-xl border border-amber-200 p-5 flex items-center justify-between gap-3 shadow-sm"
+                >
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-700"
+                    >
+                      <i class="fa-solid fa-ticket-alt text-lg"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs text-stone-500 uppercase tracking-wide">
+                        discount code for next order
+                      </p>
+                      <p
+                        class="text-xl font-mono font-bold text-amber-800 tracking-wider"
+                        id="invoiceDiscountCode"
+                      >
+                        5OFF-BREW42
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onclick="copyInvoiceDiscountCode()"
+                    class="copy-btn bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm active:scale-95 focus:ring-2 focus:ring-amber-300 no-print"
+                  >
+                    <i class="fa-regular fa-copy"></i> copy
+                  </button>
+                </div>
+                <p class="text-xs text-stone-400 mt-2 ml-2">
+                  one‑time use · 5% off your next purchase
+                </p>
+              </div>
+
+              <!-- subtotal / tax / total panel (right side) -->
+              <div class="w-full lg:w-80 bg-stone-50 rounded-xl border border-stone-200 p-5">
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between text-stone-600">
+                    <span>Subtotal</span>
+                    <span class="font-medium text-stone-800" id="invoiceSubtotal">$142.50</span>
+                  </div>
+                  <div class="flex justify-between text-stone-600">
+                    <span>Shipping (free)</span>
+                    <span class="font-medium text-stone-800">$0.00</span>
+                  </div>
+                  <div class="flex justify-between text-stone-600">
+                    <span>Tax (estimated 5%)</span>
+                    <span class="font-medium text-stone-800" id="invoiceTax">$7.13</span>
+                  </div>
+                  <!-- discount applied (if any) -->
+                  <div
+                    class="flex justify-between text-green-600 border-t border-stone-200 pt-2 mt-2"
+                    id="invoiceDiscountRow"
+                  >
+                    <span>Discount (5% welcome)</span>
+                    <span id="invoiceDiscountAmount">−$7.13</span>
+                  </div>
+                  <div
+                    class="flex justify-between font-bold text-lg text-stone-800 border-t border-stone-300 pt-3 mt-1"
+                  >
+                    <span>Total due</span>
+                    <span class="text-amber-800" id="invoiceTotalDue">$142.50</span>
+                  </div>
+                </div>
+                <!-- payment status note -->
+                <div
+                  class="mt-4 flex items-center gap-2 text-xs text-stone-500 bg-white rounded-lg p-2 border border-stone-200"
+                >
+                  <i class="fa-regular fa-clock text-amber-600"></i>
+                  <span
+                    >Payment pending — due by
+                    <span id="invoiceDueDateSmall">05 May 2025</span></span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- footer -->
+            <div
+              class="mt-10 pt-5 border-t border-amber-200 flex flex-col sm:flex-row justify-between items-center text-xs text-stone-500 gap-3"
+            >
+              <div class="flex items-center gap-4">
+                <span><i class="fa-regular fa-credit-card mr-1"></i> BACS / wire transfer</span>
+                <span><i class="fa-regular fa-building-columns mr-1"></i> Account: **** 8420</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span>thank you for supporting small roasters ☕</span>
+                <span class="hidden sm:inline">·</span>
+                <button onclick="window.print()" class="text-amber-600 hover:underline no-print">
+                  print
+                </button>
+                <button
+                  onclick="window.closeInvoiceModal()"
+                  class="text-amber-600 hover:underline no-print ml-2"
+                >
+                  close
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- end inner padding -->
+        </div>
+        <!-- end invoice card -->
+      </div>
+      <!-- end modal content -->
+    </div>
+    <!-- end invoice modal -->
 
     <!-- ========== MAIN ========== -->
     <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
@@ -551,9 +810,8 @@
         </div>
       </section>
 
-      <!-- ========== CONTACT & SUBSCRIBE SECTIONS ========== -->
-      <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- CONTACT - SOCIAL MEDIA -->
+      <!-- ========== CONTACT (SOCIAL ONLY) ========== -->
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-1 gap-6 max-w-2xl mx-auto">
         <section
           id="contact"
           class="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 scroll-mt-24"
@@ -564,7 +822,6 @@
 
           <!-- Social Media Links -->
           <div class="grid grid-cols-2 gap-4 mb-6">
-            <!-- Facebook -->
             <a
               href="https://facebook.com"
               target="_blank"
@@ -580,8 +837,6 @@
                 <p class="text-xs text-blue-600">@beanandbrew</p>
               </div>
             </a>
-
-            <!-- Instagram -->
             <a
               href="https://instagram.com"
               target="_blank"
@@ -597,8 +852,6 @@
                 <p class="text-xs text-pink-600">@beanandbrew</p>
               </div>
             </a>
-
-            <!-- Telegram -->
             <a
               href="https://telegram.org"
               target="_blank"
@@ -614,8 +867,6 @@
                 <p class="text-xs text-sky-600">@beanandbrew</p>
               </div>
             </a>
-
-            <!-- X (Twitter) -->
             <a
               href="https://twitter.com"
               target="_blank"
@@ -645,74 +896,6 @@
             </div>
           </div>
         </section>
-
-        <!-- SUBSCRIBE - WITH DISCOUNT CODE -->
-        <section
-          id="subscribe"
-          class="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 p-6 scroll-mt-24"
-        >
-          <h3 class="text-2xl font-serif font-bold text-stone-800 mb-2 flex items-center gap-2">
-            <i class="fa-regular fa-bell text-amber-700"></i> subscribe & save
-          </h3>
-          <p class="text-stone-600 text-sm mb-4">get 15% off your first order + exclusive offers</p>
-          <form id="subscribeForm" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1">your email</label>
-              <input
-                type="email"
-                id="subscribeEmail"
-                required
-                placeholder="caffeine@lover.com"
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1"
-                >preferences (optional)</label
-              >
-              <select
-                id="subscribePref"
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-              >
-                <option>both beans & tea</option>
-                <option>coffee only</option>
-                <option>tea only</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              class="bg-amber-700 hover:bg-amber-800 text-white font-medium py-2 px-6 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              subscribe <i class="fa-regular fa-star ml-1"></i>
-            </button>
-          </form>
-
-          <!-- Discount code will appear here after subscription -->
-          <div id="discountCodeContainer" class="mt-6 hidden">
-            <div class="border-t border-amber-200 pt-4">
-              <p class="text-sm font-medium text-stone-700 mb-2">🎉 Your 15% off discount code:</p>
-              <div class="flex items-center gap-2">
-                <div
-                  id="generatedDiscountCode"
-                  class="bg-amber-100 text-amber-800 font-mono font-bold text-xl py-2 px-4 rounded-lg border-2 border-amber-300 flex-grow text-center"
-                >
-                  WELCOME15
-                </div>
-                <button
-                  onclick="window.copyGeneratedCode()"
-                  class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1"
-                >
-                  <i class="fa-regular fa-copy"></i>
-                  <span class="text-sm">copy</span>
-                </button>
-              </div>
-              <p class="text-xs text-stone-500 mt-2">Use at checkout · one time use</p>
-            </div>
-          </div>
-          <p id="subscribeFeedback" class="text-sm text-green-600 hidden mt-2">
-            ✓ Subscribed! Check your email (demo) · your discount code is above
-          </p>
-        </section>
       </div>
 
       <!-- subtle sale banner -->
@@ -720,15 +903,15 @@
         class="mt-12 bg-gradient-to-r from-amber-100 to-amber-200 rounded-2xl p-5 flex flex-wrap items-center justify-between"
       >
         <div class="flex items-center gap-3">
-          <i class="fa-solid fa-tag text-2xl text-amber-700"></i>
-          <span class="font-medium text-stone-700"
-            >subscribe & save 15% on beans + free shipping</span
+          <i class="fa-solid fa-tag text-2xl text-amber-700"></i
+          ><span class="font-medium text-stone-700"
+            >Complete a purchase and get a 5% discount code for your next order</span
           >
         </div>
         <a
-          href="#subscribe"
+          href="#products"
           class="text-sm bg-white px-4 py-2 rounded-full text-amber-800 font-semibold shadow-sm hover:bg-amber-50 transition-all duration-200 hover:scale-105 active:scale-95"
-          >claim discount</a
+          >shop now</a
         >
       </div>
     </main>
@@ -773,16 +956,13 @@
 
       <div class="border-t border-amber-200 p-5 space-y-3 bg-white">
         <div class="flex justify-between text-lg font-semibold text-stone-800">
-          <span>subtotal</span>
-          <span id="sidebarSubtotal">$0.00</span>
+          <span>subtotal</span><span id="sidebarSubtotal">$0.00</span>
         </div>
         <div id="discountRow" class="flex justify-between text-sm text-green-600 hidden">
-          <span>discount (15%)</span>
-          <span id="discountAmount">-$0.00</span>
+          <span>discount (15%)</span><span id="discountAmount">-$0.00</span>
         </div>
         <div class="flex justify-between text-lg font-bold text-stone-800">
-          <span>total</span>
-          <span id="sidebarTotal">$0.00</span>
+          <span>total</span><span id="sidebarTotal">$0.00</span>
         </div>
         <button
           id="checkoutBtn"
@@ -868,15 +1048,37 @@
             >
           </div>
         </div>
+        <!-- Enhanced product details section -->
         <div class="grid grid-cols-2 gap-3 my-5 text-sm border-y border-amber-100 py-4">
           <div>
-            <i class="fa-regular fa-clock text-amber-600 w-5"></i>
-            <span class="text-stone-600" id="modalOrigin">origin: Ethiopia</span>
+            <i class="fa-regular fa-map-pin text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalOrigin">origin: Ethiopia</span>
           </div>
           <div>
-            <i class="fa-solid fa-leaf text-amber-600 w-5"></i>
-            <span class="text-stone-600" id="modalType">type: medium roast</span>
+            <i class="fa-solid fa-thermometer-half text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalType">type: medium roast</span>
           </div>
+          <div>
+            <i class="fa-regular fa-star text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalRating">rating: 4.8 ★ (120)</span>
+          </div>
+          <div>
+            <i class="fa-regular fa-calendar text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalHarvest">harvest: 2024</span>
+          </div>
+          <div>
+            <i class="fa-solid fa-droplet text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalProcess">process: washed</span>
+          </div>
+          <div>
+            <i class="fa-regular fa-clock text-amber-600 w-5"></i
+            ><span class="text-stone-600" id="modalBrew">brew: 4 min</span>
+          </div>
+        </div>
+        <!-- Flavor notes -->
+        <div class="mb-4">
+          <p class="text-xs font-medium text-stone-500 mb-1">flavor notes</p>
+          <div id="modalFlavorNotes" class="flex flex-wrap gap-2"></div>
         </div>
         <div class="flex items-center gap-4">
           <div class="flex items-center border border-amber-200 rounded-full">
@@ -904,7 +1106,7 @@
       </div>
     </div>
 
-    <!-- ========== CHECKOUT MODAL (WITH SHIPPING FORM AND STATIC QR FROM IMAGE) ========== -->
+    <!-- ========== CHECKOUT MODAL ========== -->
     <div
       id="checkoutModal"
       class="fixed inset-0 z-40 flex items-center justify-center hidden modal-transition"
@@ -935,8 +1137,7 @@
             class="text-sm text-stone-600 mt-1 max-h-20 overflow-y-auto"
           ></div>
           <div class="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-amber-200">
-            <span>total</span>
-            <span id="checkoutTotalAmount">$0.00</span>
+            <span>total</span><span id="checkoutTotalAmount">$0.00</span>
           </div>
         </div>
 
@@ -947,46 +1148,42 @@
           </h4>
           <div class="space-y-3">
             <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1">full name *</label>
-              <input
+              <label class="block text-sm font-medium text-stone-600 mb-1">full name *</label
+              ><input
                 type="text"
                 id="shippingName"
                 required
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 placeholder="John Doe"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1">email address *</label>
-              <input
+              <label class="block text-sm font-medium text-stone-600 mb-1">email address *</label
+              ><input
                 type="email"
                 id="shippingEmail"
                 required
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500"
                 placeholder="john@example.com"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1"
-                >phone number / Telegram username *</label
-              >
-              <input
+              <label class="block text-sm font-medium text-stone-600 mb-1">phone number *</label
+              ><input
                 type="text"
                 id="shippingPhone"
                 required
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
-                placeholder="+1234567890 or @telegram"
+                class="w-full border border-amber-200 rounded-lg p-2.5"
+                placeholder="+1234567890"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-600 mb-1"
-                >shipping address *</label
-              >
-              <textarea
+              <label class="block text-sm font-medium text-stone-600 mb-1">shipping address *</label
+              ><textarea
                 id="shippingAddress"
                 required
                 rows="2"
-                class="w-full border border-amber-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                class="w-full border border-amber-200 rounded-lg p-2.5"
                 placeholder="Street, city, postal code, country"
               ></textarea>
             </div>
@@ -998,7 +1195,7 @@
         <div class="grid gap-3 mb-5">
           <div
             id="pmKHQR"
-            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400 transition-all duration-200"
+            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400"
             data-method="khqr"
           >
             <div
@@ -1014,7 +1211,7 @@
           </div>
           <div
             id="pmPaypal"
-            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400 transition-all duration-200"
+            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400"
             data-method="paypal"
           >
             <div
@@ -1030,7 +1227,7 @@
           </div>
           <div
             id="pmCash"
-            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400 transition-all duration-200"
+            class="payment-method border rounded-xl p-3 flex items-center gap-3 hover:border-amber-400"
             data-method="cash"
           >
             <div
@@ -1046,7 +1243,7 @@
           </div>
         </div>
 
-        <!-- KHQR Area with ABAP PAY style design from image - USING STATIC QR IMAGE -->
+        <!-- KHQR Area -->
         <div id="khqrArea" class="hidden mb-4">
           <div class="khqr-card">
             <div class="khqr-header">
@@ -1056,36 +1253,21 @@
               </div>
               <div class="khqr-badge">BAKONG</div>
             </div>
-
             <div class="khqr-merchant">
-              <i class="fa-regular fa-building mr-2"></i>
-              <span id="qrMerchant">Bean & Brew Coffee</span>
+              <i class="fa-regular fa-building mr-2"></i><span>Bean & Brew Coffee</span>
             </div>
-
             <div class="text-center">
               <div class="qr-container">
-                <!-- STATIC QR CODE IMAGE FROM FILE - This matches your image.png -->
                 <img src="./image.png" alt="KHQR Code" class="qr-image" id="staticQrImage" />
               </div>
             </div>
-
             <div class="khqr-amount" id="qrAmount">$0.00</div>
-
             <div class="flex justify-between text-sm mb-2">
-              <span><i class="fa-regular fa-calendar mr-1"></i> Today</span>
-              <span><i class="fa-regular fa-clock mr-1"></i> <span id="qrTime">12:00</span></span>
+              <span><i class="fa-regular fa-calendar mr-1"></i> Today</span
+              ><span><i class="fa-regular fa-clock mr-1"></i> <span id="qrTime">12:00</span></span>
             </div>
-
             <div class="khqr-footer">
-              <span>MID: 125121023545441</span>
-              <span>Member of KHOC</span>
-            </div>
-
-            <div class="grid grid-cols-4 gap-2 mt-3 text-xs text-center opacity-80">
-              <span>OUTLINE</span>
-              <span>TIMELINE</span>
-              <span>HOUSTON</span>
-              <span>VS CODE PETS</span>
+              <span>MID: 125121023545441</span><span>Member of KHOC</span>
             </div>
           </div>
         </div>
@@ -1098,7 +1280,7 @@
             id="cashGiven"
             min="0"
             step="0.01"
-            class="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+            class="w-full p-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500"
             placeholder="0.00"
           />
           <div class="flex justify-between text-sm mt-2">
@@ -1110,14 +1292,11 @@
         <!-- Complete Order Button -->
         <button
           id="confirmPaymentBtn"
-          class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2 disabled:opacity-40 disabled:hover:scale-100"
+          class="w-full bg-amber-700 hover:bg-amber-800 text-white font-bold py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2 disabled:opacity-40"
           disabled
         >
           complete order
         </button>
-        <p class="text-xs text-stone-400 text-center mt-3">
-          demo — orders are saved to "my orders"
-        </p>
       </div>
     </div>
 
@@ -1130,9 +1309,9 @@
       </div>
     </footer>
 
-    <!-- ========== JAVASCRIPT ========== -->
+    <!-- JavaScript (large, integrated) -->
     <script>
-      // Define global functions first
+      // Global functions (defined first)
       window.copyDiscountCode = function () {
         const code = document.getElementById('discountCodeDisplay').textContent;
         navigator.clipboard.writeText(code);
@@ -1141,17 +1320,10 @@
         setTimeout(() => notification.classList.add('hidden'), 2000);
       };
 
-      window.copyGeneratedCode = function () {
-        const code = document.getElementById('generatedDiscountCode').textContent;
-        navigator.clipboard.writeText(code);
-        alert('Code copied to clipboard!');
-      };
-
       window.closeDiscountModal = function () {
         const modal = document.getElementById('discountModal');
         const content = document.getElementById('discountModalContent');
         const overlay = document.getElementById('overlay');
-
         if (content) {
           content.classList.remove('scale-100', 'opacity-100');
           content.classList.add('scale-95', 'opacity-0');
@@ -1167,7 +1339,6 @@
         const modal = document.getElementById('discountModal');
         const content = document.getElementById('discountModalContent');
         const overlay = document.getElementById('overlay');
-
         if (modal && content && overlay) {
           modal.classList.remove('hidden');
           overlay.classList.remove('hidden');
@@ -1183,40 +1354,93 @@
         if (popup) {
           popup.classList.add('translate-x-full', 'opacity-0');
           popup.classList.remove('translate-x-0', 'opacity-100');
-          setTimeout(() => {
-            popup.classList.add('hidden');
-          }, 300);
+          setTimeout(() => popup.classList.add('hidden'), 300);
         }
       };
 
-      // Main application code
+      // Invoice modal functions
+      window.closeInvoiceModal = function () {
+        const modal = document.getElementById('invoiceModal');
+        const content = document.getElementById('invoiceModalContent');
+        const overlay = document.getElementById('overlay');
+        if (content) {
+          content.classList.remove('scale-100', 'opacity-100');
+          content.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+          if (modal) modal.classList.add('hidden');
+          if (overlay) overlay.classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+        }, 200);
+      };
+
+      window.openInvoiceModal = function () {
+        const modal = document.getElementById('invoiceModal');
+        const content = document.getElementById('invoiceModalContent');
+        const overlay = document.getElementById('overlay');
+        if (modal && content && overlay) {
+          modal.classList.remove('hidden');
+          overlay.classList.remove('hidden');
+          setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+          }, 10);
+        }
+      };
+
+      window.copyInvoiceDiscountCode = function () {
+        const code = document.getElementById('invoiceDiscountCode').innerText;
+        navigator.clipboard.writeText(code);
+        const btn = event.currentTarget;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-regular fa-check"></i> copied';
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        btn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+        setTimeout(() => {
+          btn.innerHTML = original;
+          btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+          btn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+        }, 2000);
+      };
+
+      // Main app
       document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOM loaded - initializing app');
+        console.log('DOM fully loaded');
 
         // ---------- PRODUCT DATA ----------
         const products = [
           {
             id: 'b1',
             name: 'Ethiopia Yirgacheffe',
-            desc: 'floral, citrus, light roast',
+            desc: 'floral, citrus, light roast · clean finish',
             price: 1,
             oldPrice: 22.0,
             category: 'coffee beans',
             icon: 'fa-seedling',
             type: 'light roast',
-            origin: 'Ethiopia',
+            origin: 'Ethiopia, Yirgacheffe',
+            process: 'washed',
+            harvest: '2024',
+            rating: '4.9 ★ (342)',
+            brewTime: '3-4 min',
+            flavorNotes: ['jasmine', 'bergamot', 'honey'],
             image: 'Ethiopia Yirgacheffe.webp',
           },
           {
             id: 'b2',
             name: 'Colombia Supremo',
-            desc: 'caramel, nuts, medium roast',
+            desc: 'caramel, nuts, medium roast · balanced',
             price: 1,
             oldPrice: null,
             category: 'coffee beans',
             icon: 'fa-seedling',
             type: 'medium roast',
-            origin: 'Colombia',
+            origin: 'Colombia, Huila',
+            process: 'washed',
+            harvest: '2024',
+            rating: '4.7 ★ (215)',
+            brewTime: '4 min',
+            flavorNotes: ['caramel', 'pecan', 'brown sugar'],
             image: 'Colombia Supremo.webp',
           },
           {
@@ -1228,8 +1452,64 @@
             category: 'coffee beans',
             icon: 'fa-seedling',
             type: 'dark roast',
-            origin: 'Indonesia',
+            origin: 'Indonesia, Sumatra',
+            process: 'wet-hulled',
+            harvest: '2023',
+            rating: '4.6 ★ (178)',
+            brewTime: '4-5 min',
+            flavorNotes: ['cedar', 'dark chocolate', 'herbal'],
             image: 'Sumatra Mandheling.webp',
+          },
+          {
+            id: 'b4',
+            name: 'Guatemala Antigua',
+            desc: 'chocolate, spice, medium-dark',
+            price: 1.0,
+            oldPrice: 21.0,
+            category: 'coffee beans',
+            icon: 'fa-seedling',
+            type: 'medium-dark',
+            origin: 'Guatemala, Antigua',
+            process: 'washed',
+            harvest: '2024',
+            rating: '4.8 ★ (156)',
+            brewTime: '4 min',
+            flavorNotes: ['cocoa', 'cinnamon', 'baked apple'],
+            image: 'Guatemala Antigua.jpg',
+          },
+          {
+            id: 'b5',
+            name: 'Kenya AA',
+            desc: 'bright, winey, complex · medium roast',
+            price: 1,
+            oldPrice: 26.0,
+            category: 'coffee beans',
+            icon: 'fa-seedling',
+            type: 'medium roast',
+            origin: 'Kenya, Nyeri',
+            process: 'washed',
+            harvest: '2024',
+            rating: '4.9 ★ (289)',
+            brewTime: '3-4 min',
+            flavorNotes: ['blackcurrant', 'tomato', 'brown sugar'],
+            image: 'Kenya AA.jpg',
+          },
+          {
+            id: 'b6',
+            name: 'Costa Rica Tarrazú',
+            desc: 'honey, peach, light-medium',
+            price: 1,
+            oldPrice: null,
+            category: 'coffee beans',
+            icon: 'fa-seedling',
+            type: 'light-medium',
+            origin: 'Costa Rica, Tarrazú',
+            process: 'honey',
+            harvest: '2024',
+            rating: '4.7 ★ (132)',
+            brewTime: '3-4 min',
+            flavorNotes: ['peach', 'honey', 'vanilla'],
+            image: 'Costa Rica Tarrazu.jpg',
           },
           {
             id: 't1',
@@ -1240,7 +1520,12 @@
             category: 'green tea',
             icon: 'fa-leaf',
             type: 'green tea',
-            origin: 'China',
+            origin: 'China, Fujian',
+            process: 'scented',
+            harvest: '2024',
+            rating: '4.8 ★ (164)',
+            brewTime: '2-3 min',
+            flavorNotes: ['jasmine', 'cream', 'silk'],
             image: 'Jasmine Pearls.webp',
           },
           {
@@ -1252,7 +1537,12 @@
             category: 'black tea',
             icon: 'fa-leaf',
             type: 'black tea',
-            origin: 'India',
+            origin: 'India, Assam',
+            process: 'orthodox',
+            harvest: '2024',
+            rating: '4.6 ★ (198)',
+            brewTime: '3-4 min',
+            flavorNotes: ['bergamot', 'malt', 'honey'],
             image: 'Earl Grey.avif',
           },
           {
@@ -1264,20 +1554,13 @@
             category: 'herbal tea',
             icon: 'fa-leaf',
             type: 'herbal',
-            origin: 'Egypt',
+            origin: 'Egypt, Nile',
+            process: 'air-dried',
+            harvest: '2024',
+            rating: '4.7 ★ (92)',
+            brewTime: '5-7 min',
+            flavorNotes: ['chamomile', 'lavender', 'honey'],
             image: 'Chamomile Lavender.avif',
-          },
-          {
-            id: 'b4',
-            name: 'Guatemala Antigua',
-            desc: 'chocolate, spice, medium-dark',
-            price: 1,
-            oldPrice: 21.0,
-            category: 'coffee beans',
-            icon: 'fa-seedling',
-            type: 'medium-dark',
-            origin: 'Guatemala',
-            image: 'Guatemala Antigua.jpg',
           },
           {
             id: 't4',
@@ -1288,8 +1571,47 @@
             category: 'green tea',
             icon: 'fa-leaf',
             type: 'green tea',
-            origin: 'Japan',
+            origin: 'Japan, Uji',
+            process: 'steamed',
+            harvest: '2024',
+            rating: '4.8 ★ (143)',
+            brewTime: '1-2 min',
+            flavorNotes: ['grass', 'umami', 'nori'],
             image: 'Sencha Green.jpg',
+          },
+          {
+            id: 't5',
+            name: 'Masala Chai',
+            desc: 'spiced black tea, bold',
+            price: 1,
+            oldPrice: 17.0,
+            category: 'black tea',
+            icon: 'fa-leaf',
+            type: 'chai',
+            origin: 'India, Kerala',
+            process: 'CTC',
+            harvest: '2024',
+            rating: '4.8 ★ (207)',
+            brewTime: '5 min',
+            flavorNotes: ['cinnamon', 'cardamom', 'clove'],
+            image: 'Masala Chai.webp',
+          },
+          {
+            id: 't6',
+            name: 'White Peony',
+            desc: 'delicate, sweet, Bai Mudan',
+            price: 1,
+            oldPrice: 22.0,
+            category: 'white tea',
+            icon: 'fa-leaf',
+            type: 'white tea',
+            origin: 'China, Fuding',
+            process: 'air-dried',
+            harvest: '2024',
+            rating: '4.7 ★ (88)',
+            brewTime: '2-3 min',
+            flavorNotes: ['melon', 'hay', 'floral'],
+            image: 'White Peony.jpg',
           },
         ];
 
@@ -1298,10 +1620,12 @@
         let orders = [];
         let activeDiscount = null;
         let discountApplied = false;
+        let usedDiscountCodes = new Set();
+        let currentModalProduct = null;
+        let selectedMethod = null;
         let popupTimeout;
-        let activeModal = null;
 
-        // DOM elements cache
+        // DOM cache
         const DOM = {
           menuGrid: document.getElementById('menuGrid'),
           cartCount: document.getElementById('cartCount'),
@@ -1334,6 +1658,11 @@
           modalSaleTag: document.getElementById('modalSaleTag'),
           modalOrigin: document.getElementById('modalOrigin'),
           modalType: document.getElementById('modalType'),
+          modalRating: document.getElementById('modalRating'),
+          modalHarvest: document.getElementById('modalHarvest'),
+          modalProcess: document.getElementById('modalProcess'),
+          modalBrew: document.getElementById('modalBrew'),
+          modalFlavorNotes: document.getElementById('modalFlavorNotes'),
           modalQtySpan: document.getElementById('modalQty'),
           modalQtyDown: document.getElementById('modalQtyDown'),
           modalQtyUp: document.getElementById('modalQtyUp'),
@@ -1357,14 +1686,11 @@
           successPopup: document.getElementById('successPopup'),
           popupMessage: document.getElementById('popupMessage'),
           popupProgress: document.getElementById('popupProgress'),
-          subscribeForm: document.getElementById('subscribeForm'),
-          subscribeFeedback: document.getElementById('subscribeFeedback'),
-          discountCodeContainer: document.getElementById('discountCodeContainer'),
-          generatedDiscountCode: document.getElementById('generatedDiscountCode'),
           headerDiscountBadge: document.getElementById('headerDiscountBadge'),
           headerDiscountCode: document.getElementById('headerDiscountCode'),
           discountModal: document.getElementById('discountModal'),
           discountModalContent: document.getElementById('discountModalContent'),
+          discountCodeDisplay: document.getElementById('discountCodeDisplay'),
           productModalContent: document.getElementById('productModalContent'),
           checkoutModalContent: document.getElementById('checkoutModalContent'),
           ordersModalContent: document.getElementById('ordersModalContent'),
@@ -1373,27 +1699,38 @@
           shippingPhone: document.getElementById('shippingPhone'),
           shippingAddress: document.getElementById('shippingAddress'),
           staticQrImage: document.getElementById('staticQrImage'),
+          // invoice modal fields
+          invoiceModal: document.getElementById('invoiceModal'),
+          invoiceModalContent: document.getElementById('invoiceModalContent'),
+          invoiceCustomerName: document.getElementById('invoiceCustomerName'),
+          invoiceCustomerEmail: document.getElementById('invoiceCustomerEmail'),
+          invoiceCustomerPhone: document.getElementById('invoiceCustomerPhone'),
+          invoiceCustomerAddress: document.getElementById('invoiceCustomerAddress'),
+          invoiceNumber: document.getElementById('invoiceNumber'),
+          invoiceIssueDate: document.getElementById('invoiceIssueDate'),
+          invoiceDueDate: document.getElementById('invoiceDueDate'),
+          invoiceTerms: document.getElementById('invoiceTerms'),
+          invoiceOrderRef: document.getElementById('invoiceOrderRef'),
+          invoiceItemsBody: document.getElementById('invoiceItemsBody'),
+          invoiceDiscountCode: document.getElementById('invoiceDiscountCode'),
+          invoiceSubtotal: document.getElementById('invoiceSubtotal'),
+          invoiceTax: document.getElementById('invoiceTax'),
+          invoiceDiscountRow: document.getElementById('invoiceDiscountRow'),
+          invoiceDiscountAmount: document.getElementById('invoiceDiscountAmount'),
+          invoiceTotalDue: document.getElementById('invoiceTotalDue'),
+          invoiceDueDateSmall: document.getElementById('invoiceDueDateSmall'),
         };
-
-        let currentModalProduct = null;
-        let selectedMethod = null;
 
         const formatPrice = (p) => `$${p.toFixed(2)}`;
 
-        // Update current time for QR display
         function updateQRTime() {
           const now = new Date();
-          const hours = now.getHours().toString().padStart(2, '0');
-          const minutes = now.getMinutes().toString().padStart(2, '0');
-          if (DOM.qrTime) {
-            DOM.qrTime.textContent = `${hours}:${minutes}`;
-          }
+          if (DOM.qrTime)
+            DOM.qrTime.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         }
 
-        // Smooth modal open/close functions
         function openModalWithAnimation(modal, content) {
           if (!modal || !content) return;
-
           modal.classList.remove('hidden');
           activeModal = modal;
           void modal.offsetWidth;
@@ -1405,7 +1742,6 @@
 
         function closeModalWithAnimation(modal, content) {
           if (!modal || !content) return;
-
           content.classList.remove('scale-100', 'opacity-100');
           content.classList.add('scale-95', 'opacity-0');
           setTimeout(() => {
@@ -1418,157 +1754,106 @@
           }, 200);
         }
 
-        // Success popup function
         window.showSuccessPopup = function (orderDetails) {
           if (popupTimeout) clearTimeout(popupTimeout);
-
-          if (DOM.popupMessage) {
+          if (DOM.popupMessage)
             DOM.popupMessage.textContent = `Your order of ${orderDetails.itemCount} item${orderDetails.itemCount > 1 ? 's' : ''} (${formatPrice(orderDetails.total)}) has been placed!`;
-          }
-
           DOM.successPopup.classList.remove('hidden');
           void DOM.successPopup.offsetWidth;
           DOM.successPopup.classList.remove('translate-x-full', 'opacity-0');
           DOM.successPopup.classList.add('translate-x-0', 'opacity-100');
-
           if (DOM.popupProgress) {
             DOM.popupProgress.style.width = '100%';
-            setTimeout(() => {
-              DOM.popupProgress.style.width = '0%';
-            }, 50);
+            setTimeout(() => (DOM.popupProgress.style.width = '0%'), 50);
           }
-
-          popupTimeout = setTimeout(() => {
-            window.closeSuccessPopup();
-          }, 5000);
+          popupTimeout = setTimeout(() => window.closeSuccessPopup(), 5000);
         };
 
-        // Generate random discount code
-        function generateDiscountCode() {
-          const prefixes = ['WELCOME', 'SAVE', 'BREW', 'BEAN', 'TEA'];
-          const numbers = Math.floor(1000 + Math.random() * 9000);
-          const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-          return `${prefix}${numbers}`;
+        function generateFivePercentCode() {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          let code = '5OFF-';
+          for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+          return code;
         }
 
-        // ---------- SUBSCRIBE FORM WITH DISCOUNT ----------
-        if (DOM.subscribeForm) {
-          DOM.subscribeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const newCode = generateDiscountCode();
-            if (DOM.generatedDiscountCode) DOM.generatedDiscountCode.textContent = newCode;
-            if (DOM.headerDiscountCode) DOM.headerDiscountCode.textContent = newCode;
-            activeDiscount = newCode;
-
-            if (DOM.discountCodeContainer) DOM.discountCodeContainer.classList.remove('hidden');
-            if (DOM.headerDiscountBadge) DOM.headerDiscountBadge.classList.remove('hidden');
-
-            if (DOM.subscribeFeedback) {
-              DOM.subscribeFeedback.classList.remove('hidden');
-              DOM.subscribeFeedback.textContent = `✓ Subscribed! Your code: ${newCode} (15% off)`;
-            }
-
-            DOM.subscribeForm.reset();
-
-            setTimeout(() => {
-              if (DOM.subscribeFeedback) DOM.subscribeFeedback.classList.add('hidden');
-            }, 5000);
-          });
-        }
-
-        // ---------- CART FUNCTIONS WITH DISCOUNT ----------
+        // Cart functions
         function calculateTotals() {
           const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
           let total = subtotal;
-
           if (discountApplied) {
-            const discountValue = subtotal * 0.15;
-            total = subtotal - discountValue;
-            if (DOM.discountAmount)
-              DOM.discountAmount.textContent = `-$${discountValue.toFixed(2)}`;
+            if (window.discountPercent === 5) {
+              const d = subtotal * 0.05;
+              total = subtotal - d;
+              if (DOM.discountAmount) DOM.discountAmount.textContent = `-$${d.toFixed(2)}`;
+            } else {
+              const d = subtotal * 0.15;
+              total = subtotal - d;
+              if (DOM.discountAmount) DOM.discountAmount.textContent = `-$${d.toFixed(2)}`;
+            }
             if (DOM.discountRow) DOM.discountRow.classList.remove('hidden');
           } else {
             if (DOM.discountRow) DOM.discountRow.classList.add('hidden');
           }
-
           return { subtotal, total };
         }
 
         function refreshCartUI() {
           const { subtotal, total } = calculateTotals();
           const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-
           if (DOM.cartCount) DOM.cartCount.textContent = totalItems;
           if (DOM.cartTotalDisplay) DOM.cartTotalDisplay.textContent = formatPrice(total);
           if (DOM.sidebarSubtotal) DOM.sidebarSubtotal.textContent = formatPrice(subtotal);
           if (DOM.sidebarTotal) DOM.sidebarTotal.textContent = formatPrice(total);
-
           if (DOM.cartCount) {
             DOM.cartCount.classList.add('cart-badge-update');
             setTimeout(() => DOM.cartCount.classList.remove('cart-badge-update'), 150);
           }
-
           if (cart.length === 0) {
-            if (DOM.cartItemsContainer) {
+            if (DOM.cartItemsContainer)
               DOM.cartItemsContainer.innerHTML = `<div class="text-stone-500 text-center py-8">your cart is empty<br> <i class="fa-regular fa-face-smile mt-2 text-amber-600 text-2xl"></i></div>`;
-            }
           } else {
-            let htmlStr = '';
+            let html = '';
             cart.forEach((item) => {
-              htmlStr += `
-                <div class="flex items-start gap-3 border-b border-amber-100 pb-3" data-id="${item.id}">
-                    <div class="w-12 h-12 rounded-lg bg-amber-100 flex-shrink-0 overflow-hidden">
-                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover" loading="lazy">
-                    </div>
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-semibold text-stone-800">${item.name}</h4>
-                            <span class="text-sm font-medium text-amber-800">${formatPrice(item.price)}</span>
-                        </div>
-                        <div class="flex justify-between items-center mt-1">
-                            <span class="text-xs text-stone-500">qty ${item.quantity}</span>
-                            <div class="flex gap-2">
-                                <button class="cart-qty-btn text-xs bg-amber-200 w-6 h-6 rounded-full hover:bg-amber-300 transition-colors active:bg-amber-400" data-id="${item.id}" data-delta="-1">−</button>
-                                <span class="text-sm w-4 text-center">${item.quantity}</span>
-                                <button class="cart-qty-btn text-xs bg-amber-200 w-6 h-6 rounded-full hover:bg-amber-300 transition-colors active:bg-amber-400" data-id="${item.id}" data-delta="1">+</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-              `;
+              html += `<div class="flex items-start gap-3 border-b border-amber-100 pb-3" data-id="${item.id}"><div class="w-12 h-12 rounded-lg bg-amber-100 flex-shrink-0 overflow-hidden"><img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover"></div><div class="flex-grow"><div class="flex justify-between"><h4 class="font-semibold text-stone-800">${item.name}</h4><span class="text-sm font-medium text-amber-800">${formatPrice(item.price)}</span></div><div class="flex justify-between items-center mt-1"><span class="text-xs text-stone-500">qty ${item.quantity}</span><div class="flex gap-2"><button class="cart-qty-btn text-xs bg-amber-200 w-6 h-6 rounded-full hover:bg-amber-300" data-id="${item.id}" data-delta="-1">−</button><span class="text-sm w-4 text-center">${item.quantity}</span><button class="cart-qty-btn text-xs bg-amber-200 w-6 h-6 rounded-full hover:bg-amber-300" data-id="${item.id}" data-delta="1">+</button></div></div></div></div>`;
             });
-            if (DOM.cartItemsContainer) {
-              DOM.cartItemsContainer.innerHTML = htmlStr;
-
-              DOM.cartItemsContainer.querySelectorAll('.cart-qty-btn').forEach((btn) => {
-                btn.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                  const id = btn.dataset.id;
-                  const delta = parseInt(btn.dataset.delta, 10);
-                  updateQuantity(id, delta);
-                });
+            if (DOM.cartItemsContainer) DOM.cartItemsContainer.innerHTML = html;
+            DOM.cartItemsContainer.querySelectorAll('.cart-qty-btn').forEach((btn) => {
+              btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                updateQuantity(btn.dataset.id, parseInt(btn.dataset.delta, 10));
               });
-            }
+            });
           }
         }
 
-        // Apply discount code
+        window.discountPercent = 15;
         if (DOM.applyDiscountBtn) {
           DOM.applyDiscountBtn.addEventListener('click', () => {
             const code = DOM.discountInput ? DOM.discountInput.value.trim().toUpperCase() : '';
-
-            if (activeDiscount && code === activeDiscount) {
+            if (usedDiscountCodes.has(code)) {
               discountApplied = true;
+              window.discountPercent = 5;
               if (DOM.discountMessage) {
-                DOM.discountMessage.textContent = '✓ Discount applied! 15% off';
+                DOM.discountMessage.textContent = '✓ 5% discount applied!';
+                DOM.discountMessage.classList.remove('hidden', 'text-red-600');
+                DOM.discountMessage.classList.add('text-green-600');
+              }
+              usedDiscountCodes.delete(code);
+              if (DOM.headerDiscountCode && DOM.headerDiscountCode.textContent === code)
+                DOM.headerDiscountBadge.classList.add('hidden');
+              refreshCartUI();
+            } else if (activeDiscount && code === activeDiscount) {
+              discountApplied = true;
+              window.discountPercent = 15;
+              if (DOM.discountMessage) {
+                DOM.discountMessage.textContent = '✓ 15% discount applied!';
                 DOM.discountMessage.classList.remove('hidden', 'text-red-600');
                 DOM.discountMessage.classList.add('text-green-600');
               }
               refreshCartUI();
             } else {
               if (DOM.discountMessage) {
-                DOM.discountMessage.textContent = '✗ Invalid discount code';
+                DOM.discountMessage.textContent = '✗ Invalid or expired discount code';
                 DOM.discountMessage.classList.remove('hidden', 'text-green-600');
                 DOM.discountMessage.classList.add('text-red-600');
               }
@@ -1610,7 +1895,6 @@
             document.body.classList.add('overflow-hidden');
           }
         }
-
         function closeCart() {
           if (DOM.cartSidebar) {
             DOM.cartSidebar.classList.add('translate-x-full');
@@ -1621,7 +1905,34 @@
           }
         }
 
-        // ---------- PRODUCT MODAL ----------
+        // Render menu
+        function renderMenu() {
+          if (!DOM.menuGrid) return;
+          let html = '';
+          products.forEach((item) => {
+            html += `<div class="menu-card bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:border-amber-300 cursor-pointer" data-id="${item.id}"><img src="${item.image}" alt="${item.name}" class="product-image" loading="lazy"><div class="p-5"><div class="flex items-start justify-between"><h3 class="font-bold text-xl text-stone-800">${item.name}</h3><span class="bg-amber-50 text-amber-800 text-sm font-semibold px-3 py-1 rounded-full">${formatPrice(item.price)}</span></div><p class="text-stone-500 text-sm mt-1">${item.desc}</p><button class="add-to-cart-btn mt-4 w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 btn-primary" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" data-icon="${item.icon}" data-image="${item.image}"><i class="fa-solid fa-cart-plus"></i> add to cart</button></div></div>`;
+          });
+          DOM.menuGrid.innerHTML = html;
+          DOM.menuGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.menu-card');
+            if (!card) return;
+            const addBtn = e.target.closest('.add-to-cart-btn');
+            if (addBtn) {
+              e.stopPropagation();
+              addToCart({
+                id: addBtn.dataset.id,
+                name: addBtn.dataset.name,
+                price: parseFloat(addBtn.dataset.price),
+                icon: addBtn.dataset.icon,
+                image: addBtn.dataset.image,
+              });
+            } else {
+              const product = products.find((p) => p.id === card.dataset.id);
+              if (product) openModal(product);
+            }
+          });
+        }
+
         function openModal(product) {
           currentModalProduct = product;
           if (product.image && DOM.modalImage) {
@@ -1641,7 +1952,17 @@
           if (DOM.modalPrice) DOM.modalPrice.textContent = formatPrice(product.price);
           if (DOM.modalOrigin) DOM.modalOrigin.textContent = `origin: ${product.origin}`;
           if (DOM.modalType) DOM.modalType.textContent = `type: ${product.type}`;
-
+          if (DOM.modalRating) DOM.modalRating.textContent = `rating: ${product.rating}`;
+          if (DOM.modalHarvest) DOM.modalHarvest.textContent = `harvest: ${product.harvest}`;
+          if (DOM.modalProcess) DOM.modalProcess.textContent = `process: ${product.process}`;
+          if (DOM.modalBrew) DOM.modalBrew.textContent = `brew: ${product.brewTime}`;
+          if (DOM.modalFlavorNotes)
+            DOM.modalFlavorNotes.innerHTML = product.flavorNotes
+              .map(
+                (n) =>
+                  `<span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs">${n}</span>`
+              )
+              .join('');
           if (product.oldPrice) {
             if (DOM.modalOldPrice) {
               DOM.modalOldPrice.textContent = formatPrice(product.oldPrice);
@@ -1653,76 +1974,22 @@
             if (DOM.modalSaleTag) DOM.modalSaleTag.classList.add('hidden');
           }
           if (DOM.modalQtySpan) DOM.modalQtySpan.textContent = '1';
-
           openModalWithAnimation(DOM.productModal, DOM.productModalContent);
         }
-
         function closeModal() {
           closeModalWithAnimation(DOM.productModal, DOM.productModalContent);
         }
-
-        // ---------- RENDER MENU ----------
-        function renderMenu() {
-          if (!DOM.menuGrid) return;
-
-          let menuHtml = '';
-          products.forEach((item) => {
-            menuHtml += `
-              <div class="menu-card bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:border-amber-300 cursor-pointer" data-id="${item.id}">
-                  <img src="${item.image}" alt="${item.name}" class="product-image" loading="lazy">
-                  <div class="p-5">
-                      <div class="flex items-start justify-between">
-                          <h3 class="font-bold text-xl text-stone-800">${item.name}</h3>
-                          <span class="bg-amber-50 text-amber-800 text-sm font-semibold px-3 py-1 rounded-full">${formatPrice(item.price)}</span>
-                      </div>
-                      <p class="text-stone-500 text-sm mt-1">${item.desc}</p>
-                      <button class="add-to-cart-btn mt-4 w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 btn-primary"
-                          data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" data-icon="${item.icon}" data-image="${item.image}">
-                          <i class="fa-solid fa-cart-plus"></i> add to cart
-                      </button>
-                  </div>
-              </div>
-            `;
-          });
-          DOM.menuGrid.innerHTML = menuHtml;
-
-          DOM.menuGrid.addEventListener('click', (e) => {
-            const card = e.target.closest('.menu-card');
-            if (!card) return;
-
-            const addToCartBtn = e.target.closest('.add-to-cart-btn');
-            if (addToCartBtn) {
-              e.stopPropagation();
-              const id = addToCartBtn.dataset.id;
-              const name = addToCartBtn.dataset.name;
-              const price = parseFloat(addToCartBtn.dataset.price);
-              const icon = addToCartBtn.dataset.icon;
-              const image = addToCartBtn.dataset.image;
-              addToCart({ id, name, price, icon, image });
-            } else {
-              const id = card.dataset.id;
-              const product = products.find((p) => p.id === id);
-              if (product) openModal(product);
-            }
-          });
-        }
-
-        // Modal quantity buttons
-        if (DOM.modalQtyUp) {
+        if (DOM.modalQtyUp)
           DOM.modalQtyUp.addEventListener('click', () => {
             let q = parseInt(DOM.modalQtySpan ? DOM.modalQtySpan.textContent : '1');
             if (DOM.modalQtySpan) DOM.modalQtySpan.textContent = q + 1;
           });
-        }
-
-        if (DOM.modalQtyDown) {
+        if (DOM.modalQtyDown)
           DOM.modalQtyDown.addEventListener('click', () => {
             let q = parseInt(DOM.modalQtySpan ? DOM.modalQtySpan.textContent : '1');
             if (q > 1 && DOM.modalQtySpan) DOM.modalQtySpan.textContent = q - 1;
           });
-        }
-
-        if (DOM.modalAddToCart) {
+        if (DOM.modalAddToCart)
           DOM.modalAddToCart.addEventListener('click', () => {
             if (currentModalProduct) {
               addToCart(
@@ -1732,22 +1999,63 @@
               closeModal();
             }
           });
+        if (DOM.closeModalBtn) DOM.closeModalBtn.addEventListener('click', closeModal);
+
+        // Checkout functions
+        function validateShippingForm() {
+          const name = DOM.shippingName?.value.trim() || '';
+          const email = DOM.shippingEmail?.value.trim() || '';
+          const phone = DOM.shippingPhone?.value.trim() || '';
+          const address = DOM.shippingAddress?.value.trim() || '';
+          return name && email && phone && address;
         }
 
-        if (DOM.closeModalBtn) {
-          DOM.closeModalBtn.addEventListener('click', closeModal);
+        function selectMethod(method, element) {
+          if (!validateShippingForm()) {
+            alert('Please fill in all shipping information first');
+            return;
+          }
+          document.querySelectorAll('.payment-method').forEach((el) => {
+            el.classList.remove('selected', 'border-amber-600', 'bg-amber-50');
+            const check = el.querySelector('.method-check');
+            if (check) {
+              check.classList.remove('text-amber-600');
+              check.classList.add('text-stone-300');
+            }
+          });
+          element.classList.add('selected', 'border-amber-600', 'bg-amber-50');
+          const check = element.querySelector('.method-check');
+          if (check) {
+            check.classList.remove('text-stone-300');
+            check.classList.add('text-amber-600');
+          }
+          selectedMethod = method;
+          if (DOM.khqrArea) DOM.khqrArea.classList.add('hidden');
+          if (DOM.cashArea) DOM.cashArea.classList.add('hidden');
+          if (method === 'khqr' && DOM.khqrArea) DOM.khqrArea.classList.remove('hidden');
+          if (method === 'cash' && DOM.cashArea) DOM.cashArea.classList.remove('hidden');
+          if (DOM.confirmPaymentBtn) DOM.confirmPaymentBtn.disabled = false;
         }
 
-        // ---------- CHECKOUT ----------
+        if (DOM.pmKHQR)
+          DOM.pmKHQR.addEventListener('click', () => selectMethod('khqr', DOM.pmKHQR));
+        if (DOM.pmPaypal)
+          DOM.pmPaypal.addEventListener('click', () => selectMethod('paypal', DOM.pmPaypal));
+        if (DOM.pmCash)
+          DOM.pmCash.addEventListener('click', () => selectMethod('cash', DOM.pmCash));
+        if (DOM.cashGiven)
+          DOM.cashGiven.addEventListener('input', () => {
+            const { total } = calculateTotals();
+            const given = parseFloat(DOM.cashGiven.value) || 0;
+            if (DOM.changeDisplay)
+              DOM.changeDisplay.textContent = formatPrice(given >= total ? given - total : 0);
+          });
+
         function openCheckout() {
-          console.log('openCheckout called');
-
           if (cart.length === 0) {
             alert('Cart is empty');
             return;
           }
-
-          // Reset payment method selection
           selectedMethod = null;
           document.querySelectorAll('.payment-method').forEach((el) => {
             el.classList.remove('selected', 'border-amber-600', 'bg-amber-50');
@@ -1757,232 +2065,167 @@
               check.classList.add('text-stone-300');
             }
           });
-
           if (DOM.khqrArea) DOM.khqrArea.classList.add('hidden');
-          if (DOM.cashArea) DOM.cashArea.classList.add('hidden');
+          if (DOM.cashArea) DOM.khqrArea?.classList.add('hidden');
           if (DOM.confirmPaymentBtn) DOM.confirmPaymentBtn.disabled = true;
-
           const totalItems = cart.reduce((acc, i) => acc + i.quantity, 0);
-          if (DOM.checkoutItemCount) {
+          if (DOM.checkoutItemCount)
             DOM.checkoutItemCount.textContent =
               totalItems + (totalItems === 1 ? ' item' : ' items');
-          }
-
           let brief = '';
-          cart.slice(0, 3).forEach((i) => {
-            brief += `<div>${i.quantity}x ${i.name}</div>`;
-          });
-          if (cart.length > 3) {
+          cart.slice(0, 3).forEach((i) => (brief += `<div>${i.quantity}x ${i.name}</div>`));
+          if (cart.length > 3)
             brief += `<div class="text-stone-400">+${cart.length - 3} more</div>`;
-          }
-          if (DOM.checkoutItemsBrief) {
-            DOM.checkoutItemsBrief.innerHTML = brief;
-          }
-
+          if (DOM.checkoutItemsBrief) DOM.checkoutItemsBrief.innerHTML = brief;
           const { total } = calculateTotals();
-          if (DOM.checkoutTotalAmount) {
-            DOM.checkoutTotalAmount.textContent = formatPrice(total);
-          }
-          if (DOM.qrAmount) {
-            DOM.qrAmount.textContent = formatPrice(total);
-          }
-
+          if (DOM.checkoutTotalAmount) DOM.checkoutTotalAmount.textContent = formatPrice(total);
+          if (DOM.qrAmount) DOM.qrAmount.textContent = formatPrice(total);
           openModalWithAnimation(DOM.checkoutModal, DOM.checkoutModalContent);
         }
-
         function closeCheckout() {
           closeModalWithAnimation(DOM.checkoutModal, DOM.checkoutModalContent);
         }
 
-        // Validate shipping form
-        function validateShippingForm() {
-          const name = DOM.shippingName ? DOM.shippingName.value.trim() : '';
-          const email = DOM.shippingEmail ? DOM.shippingEmail.value.trim() : '';
-          const phone = DOM.shippingPhone ? DOM.shippingPhone.value.trim() : '';
-          const address = DOM.shippingAddress ? DOM.shippingAddress.value.trim() : '';
-
-          return name && email && phone && address;
-        }
-
-        function selectMethod(method, element) {
-          if (!validateShippingForm()) {
-            alert('Please fill in all shipping information first');
-            return;
-          }
-
-          document.querySelectorAll('.payment-method').forEach((el) => {
-            el.classList.remove('selected', 'border-amber-600', 'bg-amber-50');
-            const check = el.querySelector('.method-check');
-            if (check) {
-              check.classList.remove('text-amber-600');
-              check.classList.add('text-stone-300');
-            }
+        // Populate invoice modal with order data
+        function populateInvoiceModal(order, newFiveCode) {
+          if (DOM.invoiceCustomerName) DOM.invoiceCustomerName.textContent = order.shipping.name;
+          if (DOM.invoiceCustomerEmail) DOM.invoiceCustomerEmail.textContent = order.shipping.email;
+          if (DOM.invoiceCustomerPhone) DOM.invoiceCustomerPhone.textContent = order.shipping.phone;
+          if (DOM.invoiceCustomerAddress)
+            DOM.invoiceCustomerAddress.textContent = order.shipping.address;
+          if (DOM.invoiceNumber)
+            DOM.invoiceNumber.textContent = `#INV-${order.id.toString().slice(-8)}`;
+          const today = new Date().toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
           });
-
-          element.classList.add('selected', 'border-amber-600', 'bg-amber-50');
-          const check = element.querySelector('.method-check');
-          if (check) {
-            check.classList.remove('text-stone-300');
-            check.classList.add('text-amber-600');
-          }
-          selectedMethod = method;
-
-          if (DOM.khqrArea) DOM.khqrArea.classList.add('hidden');
-          if (DOM.cashArea) DOM.cashArea.classList.add('hidden');
-
-          if (method === 'khqr') {
-            if (DOM.khqrArea) DOM.khqrArea.classList.remove('hidden');
-          }
-          if (method === 'cash') {
-            if (DOM.cashArea) DOM.cashArea.classList.remove('hidden');
-          }
-
-          if (DOM.confirmPaymentBtn) DOM.confirmPaymentBtn.disabled = false;
-        }
-
-        if (DOM.pmKHQR) {
-          DOM.pmKHQR.addEventListener('click', () => selectMethod('khqr', DOM.pmKHQR));
-        }
-        if (DOM.pmPaypal) {
-          DOM.pmPaypal.addEventListener('click', () => selectMethod('paypal', DOM.pmPaypal));
-        }
-        if (DOM.pmCash) {
-          DOM.pmCash.addEventListener('click', () => selectMethod('cash', DOM.pmCash));
-        }
-
-        if (DOM.cashGiven) {
-          DOM.cashGiven.addEventListener('input', () => {
-            const { total } = calculateTotals();
-            const given = parseFloat(DOM.cashGiven.value) || 0;
-            const change = given - total;
-            if (DOM.changeDisplay) {
-              DOM.changeDisplay.textContent = formatPrice(change >= 0 ? change : 0);
-            }
+          if (DOM.invoiceIssueDate) DOM.invoiceIssueDate.textContent = today;
+          const due = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
           });
+          if (DOM.invoiceDueDate) DOM.invoiceDueDate.textContent = due;
+          if (DOM.invoiceDueDateSmall) DOM.invoiceDueDateSmall.textContent = due;
+          if (DOM.invoiceOrderRef)
+            DOM.invoiceOrderRef.textContent = `#BB-${order.id.toString().slice(-4)}`;
+          // Items table
+          let itemsHtml = '';
+          order.items.forEach((item) => {
+            itemsHtml += `<tr><td class="px-5 py-4"><div class="font-medium text-stone-800">${item.name}</div><div class="text-xs text-stone-500 mt-0.5">12oz bag</div></td><td class="px-5 py-4 text-right text-stone-700">${item.quantity}</td><td class="px-5 py-4 text-right text-stone-700">${formatPrice(item.price)}</td><td class="px-5 py-4 text-right font-medium text-stone-800">${formatPrice(item.price * item.quantity)}</td></tr>`;
+          });
+          if (DOM.invoiceItemsBody) DOM.invoiceItemsBody.innerHTML = itemsHtml;
+          // Totals
+          const subtotal = order.items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+          const tax = subtotal * 0.05;
+          const discountVal = order.discountApplied === '5%' ? subtotal * 0.05 : 0;
+          const total = order.total;
+          if (DOM.invoiceSubtotal) DOM.invoiceSubtotal.textContent = formatPrice(subtotal);
+          if (DOM.invoiceTax) DOM.invoiceTax.textContent = formatPrice(tax);
+          if (order.discountApplied) {
+            if (DOM.invoiceDiscountRow) DOM.invoiceDiscountRow.classList.remove('hidden');
+            if (DOM.invoiceDiscountAmount)
+              DOM.invoiceDiscountAmount.textContent = `−${formatPrice(discountVal)}`;
+          } else {
+            if (DOM.invoiceDiscountRow) DOM.invoiceDiscountRow.classList.add('hidden');
+          }
+          if (DOM.invoiceTotalDue) DOM.invoiceTotalDue.textContent = formatPrice(total);
+          if (DOM.invoiceDiscountCode) DOM.invoiceDiscountCode.textContent = newFiveCode;
         }
 
         if (DOM.confirmPaymentBtn) {
           DOM.confirmPaymentBtn.addEventListener('click', () => {
             if (!selectedMethod) return;
-
             if (!validateShippingForm()) {
               alert('Please fill in all shipping information');
               return;
             }
-
             const { total } = calculateTotals();
-
             if (selectedMethod === 'cash') {
-              const given = parseFloat(DOM.cashGiven ? DOM.cashGiven.value : '0') || 0;
+              const given = parseFloat(DOM.cashGiven?.value || '0') || 0;
               if (given < total) {
                 alert('Insufficient cash given');
                 return;
               }
             }
-
-            // Get shipping info
             const shippingInfo = {
-              name: DOM.shippingName ? DOM.shippingName.value.trim() : '',
-              email: DOM.shippingEmail ? DOM.shippingEmail.value.trim() : '',
-              phone: DOM.shippingPhone ? DOM.shippingPhone.value.trim() : '',
-              address: DOM.shippingAddress ? DOM.shippingAddress.value.trim() : '',
+              name: DOM.shippingName?.value.trim() || '',
+              email: DOM.shippingEmail?.value.trim() || '',
+              phone: DOM.shippingPhone?.value.trim() || '',
+              address: DOM.shippingAddress?.value.trim() || '',
             };
-
             const order = {
               id: Date.now(),
               date: new Date().toLocaleString(),
               items: cart.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
               total: total,
               method: selectedMethod,
-              discountApplied: discountApplied ? activeDiscount : null,
+              discountApplied: discountApplied
+                ? window.discountPercent === 5
+                  ? '5%'
+                  : '15%'
+                : null,
               shipping: shippingInfo,
             };
             orders.push(order);
+            const newFiveCode = generateFivePercentCode();
+            usedDiscountCodes.add(newFiveCode);
+            if (DOM.headerDiscountCode) DOM.headerDiscountCode.textContent = newFiveCode;
+            if (DOM.discountCodeDisplay) DOM.discountCodeDisplay.textContent = newFiveCode;
+            DOM.headerDiscountBadge.classList.remove('hidden');
+            populateInvoiceModal(order, newFiveCode); // fill invoice modal with this order + new code
 
             const itemCount = cart.reduce((acc, i) => acc + i.quantity, 0);
-            window.showSuccessPopup({
-              itemCount: itemCount,
-              total: total,
-            });
+            window.showSuccessPopup({ itemCount, total });
 
             cart = [];
             discountApplied = false;
+            window.discountPercent = 15;
             refreshCartUI();
             closeCheckout();
             closeCart();
             if (!DOM.productModal.classList.contains('hidden')) closeModal();
-
             if (DOM.shippingName) DOM.shippingName.value = '';
             if (DOM.shippingEmail) DOM.shippingEmail.value = '';
             if (DOM.shippingPhone) DOM.shippingPhone.value = '';
             if (DOM.shippingAddress) DOM.shippingAddress.value = '';
+            // after success, open invoice modal automatically
+            window.openInvoiceModal();
           });
         }
 
-        // ---------- MY ORDERS ----------
+        // Orders modal
         function openOrders() {
           if (orders.length === 0) {
-            if (DOM.ordersContainer) {
+            if (DOM.ordersContainer)
               DOM.ordersContainer.innerHTML = `<div class="text-stone-500 text-center py-8">you haven't placed any orders yet<br> <i class="fa-regular fa-face-smile mt-2 text-amber-600"></i></div>`;
-            }
           } else {
             let html = '';
             orders
               .slice()
               .reverse()
               .forEach((order) => {
-                html += `<div class="border border-amber-200 rounded-xl p-4 bg-amber-50/50">
-                    <div class="flex justify-between text-sm text-stone-500"><span>${order.date}</span><span class="font-mono">#${order.id.toString().slice(-6)}</span></div>
-                    <div class="mt-2 space-y-1">`;
+                html += `<div class="border border-amber-200 rounded-xl p-4 bg-amber-50/50"><div class="flex justify-between text-sm text-stone-500"><span>${order.date}</span><span class="font-mono">#${order.id.toString().slice(-6)}</span></div><div class="mt-2 space-y-1">`;
                 order.items.forEach((item) => {
                   html += `<div class="flex justify-between text-stone-700"><span>${item.quantity}x ${item.name}</span><span>${formatPrice(item.price)}</span></div>`;
                 });
-                html += `</div>
-                    <div class="flex justify-between font-bold mt-2 pt-2 border-t border-amber-200">
-                        <span>total</span>
-                        <span>${formatPrice(order.total)}</span>
-                    </div>
-                    <div class="text-xs text-amber-600 mt-1">paid via ${order.method} ${order.discountApplied ? '· discount applied' : ''}</div>
-                    <div class="text-xs text-stone-500 mt-2 bg-amber-100/50 p-2 rounded">
-                        <i class="fa-solid fa-truck mr-1"></i> shipping to: ${order.shipping.name}
-                    </div>
-                </div>`;
+                html += `</div><div class="flex justify-between font-bold mt-2 pt-2 border-t border-amber-200"><span>total</span><span>${formatPrice(order.total)}</span></div><div class="text-xs text-amber-600 mt-1">paid via ${order.method} ${order.discountApplied ? '· ' + order.discountApplied + ' off' : ''}</div><div class="text-xs text-stone-500 mt-2 bg-amber-100/50 p-2 rounded"><i class="fa-solid fa-truck mr-1"></i> shipping to: ${order.shipping.name}</div></div>`;
               });
-            if (DOM.ordersContainer) {
-              DOM.ordersContainer.innerHTML = html;
-            }
+            if (DOM.ordersContainer) DOM.ordersContainer.innerHTML = html;
           }
-
           openModalWithAnimation(DOM.ordersModal, DOM.ordersModalContent);
         }
-
         function closeOrders() {
           closeModalWithAnimation(DOM.ordersModal, DOM.ordersModalContent);
         }
 
-        // ---------- EVENT LISTENERS ----------
-        if (DOM.checkoutBtn) {
-          console.log('Adding checkout button event listener');
-          DOM.checkoutBtn.addEventListener('click', function (e) {
-            console.log('Checkout button clicked');
-            e.preventDefault();
-            openCheckout();
-          });
-        }
-
-        if (DOM.closeCheckoutBtn) {
-          DOM.closeCheckoutBtn.addEventListener('click', closeCheckout);
-        }
-
-        if (DOM.myOrdersBtn) {
-          DOM.myOrdersBtn.addEventListener('click', openOrders);
-        }
-
-        if (DOM.closeOrdersBtn) {
-          DOM.closeOrdersBtn.addEventListener('click', closeOrders);
-        }
-
-        if (DOM.overlay) {
+        // Event listeners
+        if (DOM.checkoutBtn) DOM.checkoutBtn.addEventListener('click', openCheckout);
+        if (DOM.closeCheckoutBtn) DOM.closeCheckoutBtn.addEventListener('click', closeCheckout);
+        if (DOM.myOrdersBtn) DOM.myOrdersBtn.addEventListener('click', openOrders);
+        if (DOM.closeOrdersBtn) DOM.closeOrdersBtn.addEventListener('click', closeOrders);
+        if (DOM.overlay)
           DOM.overlay.addEventListener('click', () => {
             if (DOM.checkoutModal && !DOM.checkoutModal.classList.contains('hidden'))
               closeCheckout();
@@ -1992,18 +2235,12 @@
               closeOrders();
             else if (DOM.discountModal && !DOM.discountModal.classList.contains('hidden'))
               window.closeDiscountModal();
+            else if (DOM.invoiceModal && !DOM.invoiceModal.classList.contains('hidden'))
+              window.closeInvoiceModal();
             else closeCart();
           });
-        }
-
-        if (DOM.cartToggleBtn) {
-          DOM.cartToggleBtn.addEventListener('click', openCart);
-        }
-
-        if (DOM.closeCartBtn) {
-          DOM.closeCartBtn.addEventListener('click', closeCart);
-        }
-
+        if (DOM.cartToggleBtn) DOM.cartToggleBtn.addEventListener('click', openCart);
+        if (DOM.closeCartBtn) DOM.closeCartBtn.addEventListener('click', closeCart);
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
             if (DOM.checkoutModal && !DOM.checkoutModal.classList.contains('hidden'))
@@ -2014,20 +2251,17 @@
               closeOrders();
             else if (DOM.discountModal && !DOM.discountModal.classList.contains('hidden'))
               window.closeDiscountModal();
+            else if (DOM.invoiceModal && !DOM.invoiceModal.classList.contains('hidden'))
+              window.closeInvoiceModal();
             else if (DOM.cartSidebar && !DOM.cartSidebar.classList.contains('translate-x-full'))
               closeCart();
           }
         });
 
-        // Update time every minute
         setInterval(updateQRTime, 60000);
-
-        // Initialize
-        console.log('Initializing app...');
         renderMenu();
         refreshCartUI();
         updateQRTime();
-        console.log('App initialized');
       });
     </script>
   </body>
